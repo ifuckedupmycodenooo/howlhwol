@@ -1,502 +1,279 @@
 
-if (not getgenv().Knives.Loaded) then
+if (not getgenv().Loaded) then
+local userInputService = game:GetService("UserInputService")
 
-    local Arguments = loadstring(game:HttpGet("https://raw.githubusercontent.com/idontcodelol12n/arguments/refs/heads/main/args",true))() -- this if it get delated
---[[
-    return {
-        ["UpdateMousePosI"] = {
-            2788229376,    -- Da Hood
-            7213786345,    -- Da Hood VC
-            16033173781,   -- Da Hood Macro
-        },
-    
-        ["UpdateMousePos"] = {
-            17897702920,   -- Og Da Hood
-            11143225577,   -- 1v1 Hood Aim Trainer
-            14975320521,   -- Ar Hood
-            17200018150,   -- Hood Of AR
-            17809101348,   -- New Hood
-            16469595315,   -- Del Hood Aim
-            17344804827,   -- Yeno Hood
-            15644861772,   -- Flame Hood
-            16435867341,   -- Mad Hood
-            12927359803,   -- Dah Aim Trainer
-            12867571492,   -- Katana Hood
-            11867820563,   -- Dae Hood
-            9825515356,    -- Hood Customs
-            17109142105,   -- Da Battles
-            14412601883,   -- Hood Bank
-            14412436145,   -- Da Uphill
-            14413712255,   -- Hood Aim
-            15186202290,   -- Da Strike
-            14487637618,   -- Da Hood Bot Aim Trainer
-            5602055394,    -- Hood Modded
-            7951883376,    -- Hood Modded VC
-            9183932460,    -- Untitled Hood
-        }
-    }
-    --]]
-
-    local notificationLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/laagginq/ui-libraries/main/xaxas-notification/src.lua"))()
-    local notifications = notificationLibrary.new({            
-        NotificationLifetime = 3, 
-        NotificationPosition = "TopLeft",
-        TextFont = Enum.Font.Code,
-        TextColor = Color3.fromRGB(255, 255, 255),
-        TextSize = 15,
-        TextStrokeTransparency = 0, 
-        TextStrokeColor = Color3.fromRGB(0, 0, 0)
-    })
-
-    notifications:BuildNotificationUI()
-
-    Script = {}
-    Script.Functions = {}
-
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local RunService = game:GetService("RunService")
-    local UserInputService = game:GetService("UserInputService")
-    local TweenService = game:GetService("TweenService")
-    local CoreGui = game:GetService("CoreGui")
-    local Players = game:GetService("Players")
-    local Client = Players.LocalPlayer
-    local Camera = workspace.CurrentCamera
-
-    local PlayerData = {}
-
-    local KnivesGui = Instance.new("ScreenGui")
-    local LockButton = Instance.new("ImageButton")
-    local MacroButton = Instance.new("ImageButton")
-
-    KnivesGui.Name = "Knives (CoreGui)"
-    KnivesGui.Parent = CoreGui
-    KnivesGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    KnivesGui.ResetOnSpawn = false
-
-    LockButton.Parent = KnivesGui
-    LockButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    LockButton.BackgroundTransparency = 1.000
-    LockButton.Position = UDim2.new(0.7, 0, 0.75, 0)
-    LockButton.Size = UDim2.new(0, 90, 0, 90)
-    LockButton.Image = "rbxasset://textures/ui/mouseLock_off@2x.png"
-
-    MacroButton.Parent = KnivesGui
-    MacroButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    MacroButton.BackgroundTransparency = 1.000
-    MacroButton.Position = UDim2.new(0.85, 0, 0.75, 0)
-    MacroButton.Size = UDim2.new(0, 90, 0, 90)
-    MacroButton.Image = "rbxassetid://113276332333710"
-    MacroButton.Visible = getgenv().Knives['Macro']['Enabled']
-
-    Script.Functions.MakeDraggable = function(topbarobject, object)
-        local Dragging = nil
-        local DragInput = nil
-        local DragStart = nil
-        local StartPosition = nil
-        
-        local function Update(input)
-            local Delta = input.Position - DragStart
-            local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
-            local Tween = TweenService:Create(object, TweenInfo.new(0.15), {Position = pos})
-            Tween:Play()
-        end
-        
-        if topbarobject then
-            topbarobject.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    Dragging = true
-                    DragStart = input.Position
-                    StartPosition = object.Position
-                    
-                    input.Changed:Connect(function()
-                        if input.UserInputState == Enum.UserInputState.End then
-                            Dragging = false
-                        end
-                    end)
-                end
-            end)
-            
-            topbarobject.InputChanged:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                    DragInput = input
-                end
-            end)
-            
-            UserInputService.InputChanged:Connect(function(input)
-                if input == DragInput and Dragging then
-                    Update(input)
-                end
-            end)
-        end
-    end
-
-    Script.Functions.MakeDraggable(LockButton, LockButton)
-    Script.Functions.MakeDraggable(MacroButton, MacroButton)
-
-    Script.Functions.CheckAnti = function(Plr)
-        if not Plr or not Plr.Character or not Plr.Character:FindFirstChild("HumanoidRootPart") then return false end
-        local hrp = Plr.Character.HumanoidRootPart
-        if hrp.Velocity.Y < -70 then
-            return true
-        elseif hrp.Velocity.X > 450 or hrp.Velocity.X < -35 then
-            return true
-        elseif hrp.Velocity.Y > 60 then
-            return true
-        elseif hrp.Velocity.Z > 35 or hrp.Velocity.Z < -35 then
-            return true
-        end
+local function CheckAnti(Plr) -- // Anti-aim detection
+    if Plr.Character.HumanoidRootPart.Velocity.Y < -70 then
+        return true
+    elseif Plr and (Plr.Character.HumanoidRootPart.Velocity.X > 450 or Plr.Character.HumanoidRootPart.Velocity.X < -35) then
+        return true
+    elseif Plr and Plr.Character.HumanoidRootPart.Velocity.Y > 60 then
+        return true
+    elseif Plr and (Plr.Character.HumanoidRootPart.Velocity.Z > 35 or Plr.Character.HumanoidRootPart.Velocity.Z < -35) then
+        return true
+    else
         return false
     end
+end
 
-    Script.Functions.CalculateVelocity = function(player)
-        if not player or not player.Character then return Vector3.new(0, 0, 0) end
-        local primary_part = player.Character:FindFirstChild(getgenv().Knives['Aimbot']['Target Part'])
-        if not primary_part then return Vector3.new(0, 0, 0) end
-        
-        if not PlayerData[player] then
-            PlayerData[player] = {
-                PreviousPosition = primary_part.Position,
-                Velocity = Vector3.new(0, 0, 0)
-            }
-        end
-        
-        local current_position = primary_part.Position
-        local previous_position = PlayerData[player].PreviousPosition
-        local displacement = current_position - previous_position
-        local delta_time = RunService.Heartbeat:Wait()
-        local velocity = displacement / delta_time
-        
-        PlayerData[player].Velocity = velocity
-        PlayerData[player].PreviousPosition = current_position
-        
-        return velocity
-    end
-
-    Script.Functions.GetPrediction = function(Plr)
-        if not Plr or not Plr.Character or not Client or not Client.Character then return 0.1 end
-        
-        if getgenv().Knives['Aimbot']['Prediction']['Auto Prediction'] then
-            local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
-            local humanoidRootPart = Plr.Character:FindFirstChild("HumanoidRootPart")
-            local clientHumanoidRootPart = Client.Character:FindFirstChild("HumanoidRootPart")
-            
-            if humanoidRootPart and clientHumanoidRootPart then
-                local distance = (humanoidRootPart.Position - clientHumanoidRootPart.Position).Magnitude
-                return 0.1 + (ping / 2500 * 1.27) + (distance / 1000 * 0.01)
-            end
-        end
-        return getgenv().Knives['Aimbot']['Prediction']['Amount']
-    end
-
-    Script.Functions.GetEvent = function()
-        if not ReplicatedStorage then return nil end
-        local RemoteNames = {"MainEvent", "Bullets", "Remote", "MAINEVENT"}
-        for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-            if remote:IsA("RemoteEvent") and table.find(RemoteNames, remote.Name) then
-                return remote
-            end
-        end
-        return nil
-    end
-
-    Script.Functions.GetArguments = function()
-        return Arguments[game.PlaceId] or "UpdateMousePos"
-    end
-
-    Script.Functions.GetClosestPlrToCenter = function()
-        if not Camera then return nil end
-        local closestDist = math.huge
-        local closestPlr = nil
-        local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-        
-        for _, v in pairs(Players:GetPlayers()) do
-            if v ~= Client and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character:FindFirstChild("HumanoidRootPart") and v.Character.Humanoid.Health > 0 then
-                local screenPos, onScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-                if onScreen then
-                    local distFromCenter = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-                    if distFromCenter < closestDist then
-                        closestDist = distFromCenter
-                        closestPlr = v
-                    end
-                end
-            end
-        end
-        return closestPlr
-    end
-
-    Script.Functions.SetupConnections = function()
-        if not Client or not Client.Character then return end
-        Client.Character.ChildAdded:Connect(function(child)
-            if child and child:IsA("Tool") then
-                child.Activated:Connect(Script.Functions.OnToolActivated)
-            end
-        end)
-    end
-
-    Script.Functions.SetupConnections()
-    Client.CharacterAdded:Connect(Script.Functions.SetupConnections)
-
-    local Remote = Script.Functions.GetEvent()
-    local Argument = Script.Functions.GetArguments()
-
-    local Locking = false
-    local Macroing = false
-    local Plr = nil
-
-    Script.Functions.OnToolActivated = function()
-    if not Locking or not Plr or not Plr.Character then return end
-    local part = Plr.Character:FindFirstChild(getgenv().Knives['Aimbot']['Target Part'])
-    if not part then return end
-    
-    local Position = part.Position 
-    local prediction = Script.Functions.GetPrediction(Plr)
-    local velocity
-    
-    if not Script.Functions.CheckAnti(Plr) then
-        velocity = part.Velocity
-    else
-        velocity = Script.Functions.CalculateVelocity(Plr)
-    end
-    
-    local PredictedPosition = Position + (velocity * prediction)
-    
-    local humanoid = Plr.Character:FindFirstChild("Humanoid")
-    if humanoid and humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-        PredictedPosition = PredictedPosition + Vector3.new(0, getgenv().Knives['Aimbot']['Jump Offset'], 0)
-    end
-
-    local mainEvent = game:GetService("ReplicatedStorage"):FindFirstChild("MainEvent")
-    if mainEvent then
-        local args = {
-            [1] = "UpdateMousePos",
-            [2] = PredictedPosition
-        }
-        mainEvent:FireServer(unpack(args))
-    end
-
-    local mainEventAlt = game:GetService("ReplicatedStorage"):FindFirstChild("MAINEVENT")
-    if mainEventAlt then
-        local args = {
-            [1] = "MOUSE", 
-            [2] = PredictedPosition
-        }
-        mainEventAlt:FireServer(unpack(args))
-    end
-    
-    local dh = game:GetService("ReplicatedStorage"):FindFirstChild("assets")
-    if dh and dh:FindFirstChild("dh") and dh.dh:FindFirstChild("MainEvent") then
-        local args = {
-            [1] = "UpdateMousePos",
-            [2] = {
-                [1] = PredictedPosition,
-                [2] = PredictedPosition
-            }
-        }
-        dh.dh.MainEvent:FireServer(unpack(args))
-    end
-
-    local lib = game:GetService("ReplicatedStorage"):FindFirstChild("Lib")
-    if lib and lib:FindFirstChild("Remote Events") and lib["Remote Events"]:FindFirstChild("MainEvent") then
-        local args = {
-            [1] = "UpdateMousePos",
-            [2] = {
-                ["MousePos"] = PredictedPosition,
-                ["Camera"] = PredictedPosition
-            }
-        }
-        lib["Remote Events"].MainEvent:FireServer(unpack(args))
-    end
-
-    local packages = game:GetService("ReplicatedStorage"):FindFirstChild("Packages")
-    if packages and packages:FindFirstChild("Knit") and packages.Knit:FindFirstChild("Services") and 
-       packages.Knit.Services:FindFirstChild("ToolService") and packages.Knit.Services.ToolService:FindFirstChild("RE") and
-       packages.Knit.Services.ToolService.RE:FindFirstChild("UpdateAim") then
-        local args = {
-            [1] = PredictedPosition
-        }
-        packages.Knit.Services.ToolService.RE.UpdateAim:FireServer(unpack(args))
-    end
-
-    local mainEvent = game:GetService("ReplicatedStorage"):FindFirstChild("MAINEVENT")
-    if mainEvent then
-        local args = {
-            [1] = "MOUSE",
-            [2] = PredictedPosition
-        }
-        mainEvent:FireServer(unpack(args))
-    end
-
-    local mainEventI2 = game:GetService("ReplicatedStorage"):FindFirstChild("MainEvent")
-    if mainEventI2 then
-        local args = {
-            [1] = "UpdateMousePosI2",
-            [2] = PredictedPosition
-        }
-        mainEventI2:FireServer(unpack(args))
-    elseif Remote and Remote:IsA("RemoteEvent") then
-        Remote:FireServer(Argument, PredictedPosition)
+local function getnamecall()
+     if game.PlaceId == 2788229376 or game.PlaceId == 7213786345 or game.PlaceId == 16033173781 or game.PlaceId == 16158576873 then 
+        return "UpdateMousePosI"
+    elseif game.PlaceId == 5602055394 or game.PlaceId == 7951883376 then
+        return "MousePos"
+    elseif game.PlaceId == 9825515356 then
+        return "GetMousePos"
     end
 end
 
-    LockButton.MouseButton1Click:Connect(function()
-        Locking = not Locking
-        if Locking then
-            LockButton.Image = "rbxasset://textures/ui/mouseLock_on@2x.png"
-            Plr = Script.Functions.GetClosestPlrToCenter()
-            if Plr and getgenv().Knives['Aimbot']['Notify'] then
-                notifications:Notify(string.format("Locked on %s", Plr.DisplayName))
-            end
-        else
-            LockButton.Image = "rbxasset://textures/ui/mouseLock_off@2x.png"
-            if Plr and getgenv().Knives['Aimbot']['Notify'] then
-                notifications:Notify("Stopped Locking")
-            end
-            Plr = nil
-        end
-    end)
-
-    MacroButton.MouseButton1Click:Connect(function()
-        Macroing = not Macroing
-        if Macroing then
-            MacroButton.ImageTransparency = 0
-        else
-            MacroButton.ImageTransparency = 0.5
-        end
-    end)
-
-    RunService.Heartbeat:Connect(function()
-        if not Client or not Client.Character then return end
-        
-        if Macroing and Client.Character:FindFirstChild("HumanoidRootPart") and Camera then
-            local Look = Camera.CFrame.LookVector
-            local Macro = Client.Character.HumanoidRootPart
-            if Look and Macro then
-                Macro.CFrame = CFrame.new(Macro.Position, Macro.Position + Vector3.new(Look.X, 0, Look.Z))
-            end
-        end
-
-        if Locking and Plr and Plr.Character and getgenv().Knives['Aimbot']['Auto Air']['Enabled'] then
-    local humanoid = Plr.Character:FindFirstChild("Humanoid")
-    local equipped = Client.Character:FindFirstChildOfClass("Tool")
-    
-    if humanoid and equipped and humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-        if getgenv().Knives['Aimbot']['Auto Air']['Delay']['Enabled'] then
-            Script.Functions.shoot = function()
-                if Locking and Plr and Plr.Character then
-                    equipped:Activate()
-                end
-            end
-            task.delay(getgenv().Knives['Aimbot']['Auto Air']['Delay']['Delay Amount'], Script.Functions.shoot)
-        else
-            equipped:Activate()
-        end
-    end
-end
-    end)
-
-    RunService.RenderStepped:Connect(function()
-        if not Locking or not Plr or not Plr.Character or not workspace.CurrentCamera then return end
-        
-        local targetPart = Plr.Character:FindFirstChild(getgenv().Knives['Aimbot']['Target Part'])
-        if not targetPart then return end
-         
-        local Position = targetPart.Position
-        local humanoid = Plr.Character:FindFirstChild("Humanoid")
-         
-        if humanoid and humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-            Position = Position + Vector3.new(0, getgenv().Knives['Aimbot']['Jump Offset'], 0)
-        end
-         
-        local velocity
-        if not Script.Functions.CheckAnti(Plr) then
-            velocity = targetPart.Velocity
-        else
-            velocity = Script.Functions.CalculateVelocity(Plr)
-        end
-        
-        local prediction = Script.Functions.GetPrediction(Plr)
-        local targetPosition = Position + (velocity * prediction)
-        
-        workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame:Lerp(
-            CFrame.lookAt(
-                workspace.CurrentCamera.CFrame.Position,
-                targetPosition
-            ),
-            getgenv().Knives['Aimbot']['Camera']['Smoothing']
-        )
-    end)
-
-    if getgenv().Knives['Textures']['Enabled'] then
-        local Textures = getgenv().Knives['Textures']['Config']
-        
-        local mt = getrawmetatable(game)
-        local oldIndex = mt.__index
-        local oldNewIndex = mt.__newindex
-        setreadonly(mt, false)
-
-        mt.__index = newcclosure(function(self, key)
-            if Textures['Enabled'] then
-                if key == "Color" and self:IsA("BasePart") then
-                    if Textures['Ignore Players'] then
-                        local player = game.Players:GetPlayerFromCharacter(self.Parent)
-                        if player then return oldIndex(self, key) end
-                    end
-                    return Textures['Color']
-                elseif key == "Material" and self:IsA("BasePart") then
-                    if Textures['Ignore Players'] then
-                        local player = game.Players:GetPlayerFromCharacter(self.Parent)
-                        if player then return oldIndex(self, key) end
-                    end
-                    return Textures['Material']
-                end
-            end
-            return oldIndex(self, key)
-        end)
-
-        mt.__newindex = newcclosure(function(self, key, value)
-            if Textures['Enabled'] and self:IsA("BasePart") then
-                if Textures['Ignore Players'] then
-                    local player = game.Players:GetPlayerFromCharacter(self.Parent)
-                    if player then return oldNewIndex(self, key, value) end
-                end
-                if key == "Color" then
-                    return oldNewIndex(self, key, Textures['Color'])
-                elseif key == "Material" then
-                    return oldNewIndex(self, key, Textures['Material'])
-                end
-            end
-            return oldNewIndex(self, key, value)
-        end)
-
-        for _, v in pairs(workspace:GetDescendants()) do
-    if v:IsA("BasePart") then
-        if Textures['Ignore Players'] then
-            local player = game.Players:GetPlayerFromCharacter(v.Parent) or game.Players:GetPlayerFromCharacter(v.Parent.Parent)
-            if not player then
-                v.Material = Textures['Material']
-                v.Color = Textures['Color']
-            end
-        else
-            v.Material = Textures['Material']
-            v.Color = Textures['Color']
-        end
-    elseif (v:IsA("Decal") or v:IsA("Texture")) then
-        local player = game.Players:GetPlayerFromCharacter(v.Parent) or game.Players:GetPlayerFromCharacter(v.Parent.Parent)
-        if not player and v.Parent.Name ~= "Head" then
-            v:Destroy()
+function MainEventLocate()
+    for _,v in pairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+        if v.Name == "MainEvent" then
+            return v
         end
     end
 end
 
-workspace.DescendantAdded:Connect(function(v)
-    if (v:IsA("Decal") or v:IsA("Texture")) then
-        local player = game.Players:GetPlayerFromCharacter(v.Parent) or game.Players:GetPlayerFromCharacter(v.Parent.Parent)
-        if not player and v.Parent.Name ~= "Head" then
-            v:Destroy()
+local Locking = false
+local Players = game:GetService("Players")
+local Client = Players.LocalPlayer
+local Plr = nil -- Initialize Plr here
+
+-- 360 on bind
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local Toggle = false -- Initialize Toggle to false
+
+local function OnKeyPress(Input, GameProcessedEvent)
+    if Input.KeyCode == getgenv().Howl.Aimbot.Keybind and not GameProcessedEvent then 
+        Toggle = not Toggle
+    elseif Input.KeyCode == getgenv().Howl.Macro.SpeedGlitchKey then
+        if getgenv().Howl.Macro.Enabled then 
+            getgenv().Howl.Macro.SpeedGlitch = not getgenv().Howl.Macro.SpeedGlitch
+            if getgenv().Howl.Macro.SpeedGlitch then
+                repeat
+                    game:GetService("RunService").Heartbeat:Wait()
+                    keypress(0x49)
+                    game:GetService("RunService").Heartbeat:Wait()
+                    keypress(0x4F)
+                    game:GetService("RunService").Heartbeat:Wait()
+                    keyrelease(0x49)
+                    game:GetService("RunService").Heartbeat:Wait()
+                    keyrelease(0x4F)
+                    game:GetService("RunService").Heartbeat:Wait()
+                until not getgenv().Howl.Macro.SpeedGlitch
+            end
+        end
+    end
+end
+
+UserInputService.InputBegan:Connect(OnKeyPress)
+
+UserInputService.InputBegan:Connect(function(keygo, ok)
+    if (not ok) then
+        if (keygo.KeyCode == getgenv().Howl.Aimbot.Keybind) then
+            Locking = not Locking
+            if Locking then
+                Plr = getClosestPlayerToCursor()
+            elseif not Locking then
+                if Plr then
+                    Plr = nil
+                end
+            end
         end
     end
 end)
+
+function getClosestPlayerToCursor()
+    local closestDist = math.huge
+    local closestPlr = nil
+    for _, v in ipairs(Players:GetPlayers()) do
+        if v ~= Client and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+            local screenPos, cameraVisible = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+            if cameraVisible then
+                local distToMouse = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                if distToMouse < closestDist then
+                    closestPlr = v
+                    closestDist = distToMouse
+                end
+            end
+        end
+    end
+    return closestPlr
+end
+
+function getClosestPartToCursor(Player)
+    local closestPart, closestDist = nil, math.huge
+    if Player.Character and Player.Character:FindFirstChild("Humanoid") and Player.Character:FindFirstChild("Head") and Player.Character.Humanoid.Health ~= 0 and Player.Character:FindFirstChild("HumanoidRootPart") then
+        for i, part in pairs(Player.Character:GetChildren()) do
+            if part:IsA("BasePart") then
+                local screenPos, cameraVisible = workspace.CurrentCamera:WorldToViewportPoint(part.Position)
+                local distToMouse = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                if distToMouse < closestDist and table.find(getgenv().Howl.Aimbot.MultipleTargetPart, part.Name) then
+                    closestPart = part
+                    closestDist = distToMouse
+                end
+            end
+        end
+        return closestPart
+    end
+end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if Plr and Plr.Character then
+        if getgenv().Howl.Aimbot.NearestPart == true and getgenv().Howl.Aimbot.Basic == false then
+            getgenv().Howl.Aimbot.TargetPart = tostring(getClosestPartToCursor(Plr))
+        elseif getgenv().Howl.Aimbot.Basic == true and getgenv().Howl.Aimbot.NearestPart == false then
+            getgenv().Howl.Aimbot.TargetPart = getgenv().Howl.Aimbot.TargetPart
+        end
+    end
+end)
+
+local function getVelocity(Player)
+    local Old = Player.Character.HumanoidRootPart.Position
+    wait(0.145)
+    local Current = Player.Character.HumanoidRootPart.Position
+    return (Current - Old) / 0.145
+end
+
+local function GetShakedVector3(Setting)
+    return Vector3.new(math.random(-Setting * 1e9, Setting * 1e9), math.random(-Setting * 1e9, Setting * 1e9), math.random(-Setting * 1e9, Setting * 1e9)) / 1e9;
+end
+
+local v = nil
+game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
+    if Plr ~= nil and Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") then
+        v = getVelocity(Plr)
+    end
+end)
+
+local mainevent = game:GetService("ReplicatedStorage").MainEvent
+
+Client.Character.ChildAdded:Connect(function(child)
+    if child:IsA("Tool") and child:FindFirstChild("MaxAmmo") then
+        child.Activated:Connect(function()
+            if Plr and Plr.Character then
+                local Position = Plr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall and Plr.Character[getgenv().Howl.Aimbot.TargetPart].Position + Vector3.new(0, getgenv().Howl.Aimbot.JumpOffset, 0) or Plr.Character[getgenv().Howl.Aimbot.TargetPart].Position
+                if game.PlaceId == 2788229376 or game.PlaceId == 7213786345 or game.PlaceId == 16033173781 or game.PlaceId == 16158576873 then 
+                    mainevent:FireServer("UpdateMousePosI", Position + ((Plr.Character.HumanoidRootPart.Velocity) * getgenv().Howl.Aimbot.Prediction))
+                else
+                    mainevent:FireServer("UpdateMousePos", Position + ((Plr.Character.Humanoid.MoveDirection * Plr.Character.Humanoid.WalkSpeed) * getgenv().Howl.Aimbot.Prediction))
+                end
+            end
+        end)
+    end
+end)
+
+Client.CharacterAdded:Connect(function(character)
+    character.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") and child:FindFirstChild("MaxAmmo") then
+            child.Activated:Connect(function()
+                if Plr and Plr.Character then
+                    local Position = Plr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall and Plr.Character[getgenv().Howl.Aimbot.TargetPart].Position + Vector3.new(0, getgenv().Howl.Aimbot.JumpOffset, 0) or Plr.Character[getgenv().Howl.Aimbot.TargetPart].Position
+                    if game.PlaceId == 2788229376 or game.PlaceId == 7213786345 or game.PlaceId == 16033173781 or game.PlaceId == 16158576873 then 
+                        mainevent:FireServer("UpdateMousePosI", Position + ((Plr.Character.HumanoidRootPart.Velocity) * getgenv().Howl.Aimbot.Prediction))
+                    else
+                        mainevent:FireServer("UpdateMousePos", Position + ((Plr.Character.Humanoid.MoveDirection * Plr.Character.Humanoid.WalkSpeed) * getgenv().Howl.Aimbot.Prediction))
+                    end
+                end
+            end)
+        end
+    end)
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if Plr ~= nil and Plr.Character then
+        local Position = Plr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall and Plr.Character[getgenv().Howl.Aimbot.TargetPart].Position + Vector3.new(0, getgenv().Howl.Aimbot.JumpOffset, 0) or Plr.Character[getgenv().Howl.Aimbot.TargetPart].Position
+        if not CheckAnti(Plr) then
+            local Main = CFrame.new(workspace.CurrentCamera.CFrame.p, Position + ((Plr.Character.HumanoidRootPart.Velocity) * getgenv().Howl.Aimbot.Smoothness) + GetShakedVector3(getgenv().Howl.Aimbot.Shake))
+            workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame:Lerp(Main, getgenv().Howl.Aimbot.Amount, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+        else
+            local Main = CFrame.new(workspace.CurrentCamera.CFrame.p, Position + ((Plr.Character.Humanoid.MoveDirection * Plr.Character.Humanoid.WalkSpeed) * getgenv().Howl.Aimbot.Smoothness) + GetShakedVector3(getgenv().Howl.Aimbot.CameraShake))
+            workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame:Lerp(Main, getgenv().Howl.Aimbot.Amount, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+        end
+    end
+    if getgenv().Howl.Checks.PlayerDeath == true and Plr and Plr.Character then
+        local KOd = Plr.Character:WaitForChild("BodyEffects")["K.O"].Value
+        local Grabbed = Plr.Character:FindFirstChild("GRABBING_CONSTRAINT") ~= nil
+        if Plr.Character.Humanoid.Health < 1 or KOd or Grabbed then
+            if Locking == true then
+                Plr = nil
+                Locking = false
+            end
+        end
+    end
+    if getgenv().Howl.Checks.TargetDeath == true and Plr and Plr.Character:FindFirstChild("Humanoid") then
+        if Plr.Character.Humanoid.health < 1 then
+            if Locking == true then
+                Plr = nil
+                Locking = false
+            end
+        end
+    end
+    if getgenv().Howl.Checks.PlayerDeath  == true and Client.Character and Client.Character:FindFirstChild("Humanoid") and Client.Character.Humanoid.health < 1 then
+        if Locking == true then
+            Plr = nil
+            Locking = false
+        end
+    end
+    if getgenv().Howl.Safety.AntiGroundShots == true and Plr.Character.Humanoid.Jump == true and Plr.Character.Humanoid.FloorMaterial == Enum.Material.Air then
+        pcall(function()
+            local TargetVelv5 = Plr.Character.HumanoidRootPart
+    TargetVelv5.Velocity = Vector3.new(TargetVelv5.Velocity.X, math.abs(TargetVelv5.Velocity.Y * 0.36),
+     TargetVelv5.Velocity.Z)
+            TargetVelv5.AssemblyLinearVelocity = Vector3.new(TargetVelv5.Velocity.X, math.abs(TargetVelv5.Velocity.Y * 0.36), TargetVelv5.Velocity.Z)
+        end)
+    end
+end)
+
+if getgenv().Howl.Spin.Enabled == true then
+    
+    local Players = game:GetService("Players")
+    local UserInputService = game:GetService("UserInputService")
+    local RunService = game:GetService("RunService")
+    local Camera = workspace.CurrentCamera
+    local Toggle = getgenv().Howl.Spin.Enabled
+    local RotationSpeed = getgenv().Howl.Spin.SpinSpeed
+    local Keybind = getgenv().Howl.Spin.Keybind
+    
+    local function OnKeyPress(Input, GameProcessedEvent)
+        if Input.KeyCode == Keybind and not GameProcessedEvent then 
+            Toggle = not Toggle
+        end
+    end
+    
+    UserInputService.InputBegan:Connect(OnKeyPress)
+    
+    local LastRenderTime = 0
+    local TotalRotation = 0
+    
+    local function RotateCamera()
+        if Toggle then
+            local CurrentTime = tick()
+            local TimeDelta = math.min(CurrentTime - LastRenderTime, 0.01)
+            LastRenderTime = CurrentTime
+    
+            local RotationAngle = RotationSpeed * TimeDelta
+            local Rotation = CFrame.fromAxisAngle(Vector3.new(0, 1, 0), math.rad(RotationAngle))
+            Camera.CFrame = Camera.CFrame * Rotation
+    
+            TotalRotation = TotalRotation + RotationAngle
+            if TotalRotation >= getgenv().Howl.Spin.Degrees then 
+                Toggle = false
+                TotalRotation = 0
+            end
+        end
+    end
+    
+    RunService.RenderStepped:Connect(RotateCamera)
     end
 
-    getgenv().Knives.Loaded = true
+getgenv().Loaded = true -- end of the script
+else
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "CHAT.GPT",
+        Text = "Settings changed",
+        Duration = 0.001
+    })
 end
